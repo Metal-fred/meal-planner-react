@@ -17,18 +17,16 @@ export default function MealPlannerApp() {
   };
 
   const categorias = Object.keys(shopping);
-
-  // Determinar el número máximo de elementos por columna
   const maxLength = Math.max(...categorias.map(cat => shopping[cat].length));
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Meal Planner</h1>
-      <table className="table-fixed border-collapse">
+      <h1 className="text-2xl font-bold mb-4 text-center">Meal Planner</h1>
+      <table className="table-fixed border-collapse w-full">
         <thead>
           <tr>
             {categorias.map(cat => (
-              <th key={cat} className="text-left pr-6 pb-2">{cat}</th>
+              <th key={cat} className="text-left pr-4 pb-2 border-b border-gray-300">{cat}</th>
             ))}
           </tr>
         </thead>
@@ -38,15 +36,15 @@ export default function MealPlannerApp() {
               {categorias.map(cat => {
                 const item = shopping[cat][rowIdx];
                 return (
-                  <td key={cat + rowIdx} className="pr-6">
+                  <td key={cat + rowIdx} className="pr-4 align-top">
                     {item ? (
-                      <label>
+                      <label className="flex items-center gap-1">
                         <input
                           type="checkbox"
                           checked={!!checked[item]}
                           onChange={() => setChecked(c => ({ ...c, [item]: !c[item] }))}
-                        />{" "}
-                        {item}
+                        />
+                        <span className={checked[item] ? "line-through text-gray-400" : ""}>{item}</span>
                       </label>
                     ) : null}
                   </td>
