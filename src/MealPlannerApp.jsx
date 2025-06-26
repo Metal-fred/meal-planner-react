@@ -2,11 +2,10 @@ import { useState } from "react";
 import jsPDF from "jspdf";
 
 export default function MealPlannerApp() {
-  /* ------------------ Datos ------------------ */
+  /* ----------------------- Datos base ----------------------- */
   const shopping = {
     Verduras: [
-      "Lechuga", "Espinacas", "Repollo", "Zanahorias", "Tomates", "Pepino",
-      "Zapallo", "Brócoli", "Papas", "Pimiento", "Cebolla", "Ajo",
+      "Lechuga", "Espinacas", "Repollo", "Zanahorias", "Tomates", "Pepino", "Zapallo", "Brócoli", "Papas", "Pimiento", "Cebolla", "Ajo",
     ],
     Frutas: ["Manzanas", "Plátanos", "Peras", "Arándanos"],
     Proteínas: [
@@ -15,35 +14,29 @@ export default function MealPlannerApp() {
     Legumbres: ["Lentejas", "Garbanzos", "Arroz int.", "Quinoa", "Avena tra."],
     Panadería: ["Pan int.", "Pan pita"],
     "Frutos secos": ["Nueces", "Linaza", "Frutos secos"],
-    Otros: [
-      "Aceite oliva", "Té verde", "Té de hierbas", "Cúrcuma", "Orégano", "Café",
-    ],
+    Otros: ["Aceite oliva", "Té verde", "Té de hierbas", "Cúrcuma", "Orégano", "Café"],
     Cárnicos: ["Longaniza", "Posta Rosada"],
     Aseo: [
-      "Lavalosa", "Cloro", "Detergente", "Suavizante", "Papel hig.", "Toallas h.",
-      "Toallas li.", "NOVA",
+      "Lavalosa", "Cloro", "Detergente", "Suavizante", "Papel hig.", "Toallas h.", "Toallas li.", "NOVA",
     ],
     Licores: ["Vino tinto"],
   };
 
   const categorias = Object.keys(shopping);
 
-  /* -------------- Estados -------------- */
+  /* ----------------------- Estados ----------------------- */
   const [checked, setChecked] = useState({});
   const [expanded, setExpanded] = useState({});
 
-  /* -------------- Acciones -------------- */
-  const toggleCategory = (cat) =>
-    setExpanded((e) => ({ ...e, [cat]: !e[cat] }));
-
+  /* ----------------------- Helpers ----------------------- */
+  const toggleCategory = (cat) => setExpanded((e) => ({ ...e, [cat]: !e[cat] }));
   const clearSelection = () => setChecked({});
 
   const buildSelectedByCategory = () =>
     categorias
       .map((cat) => {
         const items = shopping[cat].filter((i) => checked[i]);
-        if (!items.length) return null;
-        return `${cat}:\n- ${items.join("\n- ")}`;
+        return items.length ? `${cat}:\n- ${items.join("\n- ")}` : null;
       })
       .filter(Boolean)
       .join("\n\n");
@@ -51,27 +44,33 @@ export default function MealPlannerApp() {
   const downloadPDF = () => {
     const texto = buildSelectedByCategory();
     if (!texto) return alert("No hay ítems seleccionados");
-
     const doc = new jsPDF();
+    doc.setFontSize(14);
     let y = 20;
-    doc.setFontSize(16);
-    doc.text("Lista de compras", 15, 15);
-    doc.setFontSize(11);
-    texto.split("\n").forEach((linea) => {
+    doc.text("Lista de compras", 105, 12, { align: "center" });
+    doc.setFontSize(10);
+    texto.split("\n").forEach((line) => {
       if (y > 280) {
         doc.addPage();
         y = 15;
       }
-      doc.text(linea, 15, y);
+      doc.text(line, 15, y);
       y += 6;
     });
     doc.save("lista_compras.pdf");
   };
 
+  const copySelected = () => {
+    const txt = buildSelectedByCategory();
+    if (!txt) return alert("No hay ítems seleccionados");
+    navigator.clipboard.writeText(txt);
+    alert("¡Seleccionados copiados al portapapeles!");
+  };
+
   const downloadTXT = () => {
-    const texto = buildSelectedByCategory();
-    if (!texto) return alert("No hay ítems seleccionados");
-    const blob = new Blob([texto], { type: "text/plain;charset=utf-8" });
+    const txt = buildSelectedByCategory();
+    if (!txt) return alert("No hay ítems seleccionados");
+    const blob = new Blob([txt], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -80,72 +79,89 @@ export default function MealPlannerApp() {
     URL.revokeObjectURL(url);
   };
 
-  /* -------------- UI -------------- */
+  /* ----------------------- UI ----------------------- */
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-4 max-w-md mx-auto">
+    <div className="min-h-screen flex flex-col items-center bg-gray-50 text-gray-800 px-4 pb-10 md:pt-6">
       {/* Título */}
-      <h1 className="text-4xl font-extrabold mb-6 text-center">Meal Planner</h1>
+      <h1 className="text-4xl sm:text-5xl font-extrabold mb-6 text-center w-full">
+        Meal Planner
+      </h1>
 
-      {/* Botones */}
-      <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8 w-full">
+      {/* Barra de acciones */}
+      <div className="flex flex-wrap justify-center gap-3 w-full max-w-lg mb-8">
         <button
           onClick={clearSelection}
-          className="flex-1 bg-gray-800 border border-gray-600 px-4 py-2 rounded text-blue-400 hover:bg-gray-700"
+          className="action-btn border-indigo-500 text-indigo-600"
         >
           Limpiar selección
         </button>
         <button
           onClick={downloadPDF}
-          className="flex-1 bg-gray-800 border border-gray-600 px-4 py-2 rounded text-blue-400 hover:bg-gray-700"
+          className="action-btn border-blue-500 text-blue-600"
         >
           Descargar PDF
         </button>
         <button
           onClick={downloadTXT}
-          className="flex-1 bg-gray-800 border border-gray-600 px-4 py-2 rounded text-blue-400 hover:bg-gray-700"
+          className="action-btn border-emerald-500 text-emerald-600"
         >
           Exportar TXT
         </button>
+        <button
+          onClick={copySelected}
+          className="action-btn border-pink-500 text-pink-600"
+        >
+          Copiar seleccionados
+        </button>
       </div>
 
-      {/* Categorías */}
-      {categorias.map((cat) => (
-        <div key={cat} className="mb-3">
-          {/* Encabezado tipo acordeón */}
-          <button
-            onClick={() => toggleCategory(cat)}
-            className="w-full flex justify-between items-center bg-gray-800 px-4 py-2 rounded text-blue-400 font-semibold"
-          >
-            <span>{cat}</span>
-            <span>{expanded[cat] ? "▲" : "▼"}</span>
-          </button>
+      {/* Lista de categorías */}
+      <div className="w-full max-w-lg space-y-3">
+        {categorias.map((cat) => (
+          <div key={cat} className="">
+            {/* Encabezado */}
+            <button
+              onClick={() => toggleCategory(cat)}
+              className="w-full flex justify-between items-center bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md shadow-sm font-semibold"
+            >
+              <span>{cat}</span>
+              <span>{expanded[cat] ? "▲" : "▼"}</span>
+            </button>
 
-          {/* Lista de ítems */}
-          {expanded[cat] && (
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 px-4 text-sm">
-              {shopping[cat].map((item) => (
-                <li key={item}>
-                  <label className="inline-flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      className="text-blue-400 bg-gray-700 border-gray-600 rounded"
-                      checked={!!checked[item]}
-                      onChange={() =>
-                        setChecked((c) => ({ ...c, [item]: !c[item] }))
-                      }
-                    />
-                    <span
-                      className={checked[item] ? "line-through text-gray-500" : ""}
-                    >
-                      {item}
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ))}
+            {/* Ítems */}
+            {expanded[cat] && (
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 px-4 text-sm">
+                {shopping[cat].map((item) => (
+                  <li key={item}>
+                    <label className="inline-flex items-center gap-1 select-none">
+                      <input
+                        type="checkbox"
+                        className="rounded text-indigo-600 focus:ring-indigo-500"
+                        checked={!!checked[item]}
+                        onChange={() =>
+                          setChecked((c) => ({ ...c, [item]: !c[item] }))
+                        }
+                      />
+                      <span
+                        className={checked[item] ? "line-through text-gray-400" : ""}
+                      >
+                        {item}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Estilos utilitarios */}
+      <style jsx>{`
+        .action-btn {
+          @apply bg-white border px-4 py-1.5 rounded-md shadow-sm hover:bg-gray-100 text-sm font-medium transition;
+        }
+      `}</style>
     </div>
   );
 }
