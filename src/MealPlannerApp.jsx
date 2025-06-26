@@ -1,67 +1,104 @@
 import { useState } from "react";
+import jsPDF from "jspdf";
 
 export default function MealPlannerApp() {
   const [checked, setChecked] = useState({});
+  const [expanded, setExpanded] = useState({});
 
   const shopping = {
-    Verduras: ["Lechuga", "Espinacas", "Repollo", "Zanahorias", "Tomates", "Pepino", "Zapallo", "Brócoli", "Papas", "Pimiento", "Cebolla", "Ajo"],
+    Verduras: [
+      "Lechuga",
+      "Espinacas",
+      "Repollo",
+      "Zanahorias",
+      "Tomates",
+      "Pepino",
+      "Zapallo",
+      "Brócoli",
+      "Papas",
+      "Pimiento",
+      "Cebolla",
+      "Ajo",
+    ],
     Frutas: ["Manzanas", "Plátanos", "Peras", "Arándanos"],
-    Proteínas: ["Huevos", "P. pollo", "Salmón", "Jurel", "P. pavo", "Atún", "Quesillo", "Yogurt"],
+    Proteínas: [
+      "Huevos",
+      "P. pollo",
+      "Salmón",
+      "Jurel",
+      "P. pavo",
+      "Atún",
+      "Quesillo",
+      "Yogurt",
+    ],
     Legumbres: ["Lentejas", "Garbanzos", "Arroz int.", "Quinoa", "Avena tra."],
     Panadería: ["Pan int.", "Pan pita"],
     "Frutos secos": ["Nueces", "Linaza", "Frutos secos"],
-    Otros: ["Aceite oliva", "Té verde", "Té de hierbas", "Cúrcuma", "Orégano", "Café"],
+    Otros: [
+      "Aceite oliva",
+      "Té verde",
+      "Té de hierbas",
+      "Cúrcuma",
+      "Orégano",
+      "Café",
+    ],
     Cárnicos: ["Longaniza", "Posta Rosada"],
-    Aseo: ["Lavalosa", "Cloro", "Detergente", "Suavizante", "Papel hig.", "Toallas h.", "Toallas li.", "NOVA"],
-    Licores: ["Vino tinto"]
+    Aseo: [
+      "Lavalosa",
+      "Cloro",
+      "Detergente",
+      "Suavizante",
+      "Papel hig.",
+      "Toallas h.",
+      "Toallas li.",
+      "NOVA",
+    ],
+    Licores: ["Vino tinto"],
   };
 
   const categorias = Object.keys(shopping);
-  const maxLength = Math.max(...categorias.map(cat => shopping[cat].length));
 
   const clearSelection = () => setChecked({});
-  const copySelected = () => {
-    const selectedItems = Object.entries(checked)
-      .filter(([, value]) => value)
-      .map(([key]) => key)
-      .join(", ");
-    navigator.clipboard.writeText(selectedItems);
-  };
 
   const downloadPDF = () => {
-    import("jspdf").then(jsPDF => {
-      const doc = new jsPDF.jsPDF();
-      let y = 10;
-      categorias.forEach(cat => {
-        doc.text(cat, 10, y);
+    const doc = new jsPDF();
+    let y = 20;
+    doc.setFontSize(14);
+    doc.text("Lista de compras seleccionadas", 15, 15);
+    doc.setFontSize(11);
+
+    categorias.forEach((cat) => {
+      const items = shopping[cat].filter((i) => checked[i]);
+      if (items.length === 0) return;
+      if (y > 280) {
+        doc.addPage();
+        y = 15;
+      }
+      doc.text(cat + ":", 15, y);
+      y += 6;
+      items.forEach((it) => {
+        doc.text("• " + it, 20, y);
         y += 6;
-        shopping[cat].forEach(item => {
-          if (checked[item]) {
-            doc.text("• " + item, 14, y);
-            y += 6;
-          }
-        });
-        y += 4;
       });
-      doc.save("lista-supermercado.pdf");
+      y += 4;
     });
+
+    doc.save("lista_compras.pdf");
   };
 
+  const toggleCategory = (cat) =>
+    setExpanded((e) => ({ ...e, [cat]: !e[cat] }));
+
   return (
-    <div className="p-4 max-w-7xl mx-auto overflow-x-auto">
-      <h1 className="text-2xl font-bold mb-4 text-center">Meal Planner</h1>
-      <div className="flex flex-wrap justify-center gap-2 mb-4">
+    <div className="p-4 max-w-lg mx-auto">
+      <h1 className="text-3xl font-bold mb-6 text-center">Meal Planner</h1>
+
+      <div className="flex justify-center gap-3 flex-wrap mb-6">
         <button
           onClick={clearSelection}
           className="bg-white border border-gray-400 px-4 py-1 rounded shadow hover:bg-gray-100"
         >
           Limpiar selección
-        </button>
-        <button
-          onClick={copySelected}
-          className="bg-white border border-gray-400 px-4 py-1 rounded shadow hover:bg-gray-100"
-        >
-          Copiar seleccionados
         </button>
         <button
           onClick={downloadPDF}
@@ -70,46 +107,44 @@ export default function MealPlannerApp() {
           Descargar PDF
         </button>
       </div>
-      <div className="overflow-x-auto">
-        <table className="table-fixed border-collapse w-full text-sm">
-          <thead>
-            <tr>
-              {categorias.map(cat => (
-                <th key={cat} className="text-left pr-4 pb-2 align-top whitespace-nowrap">
-                  {cat}
-                </th>
+
+      {/* Listado por categoría */}
+      {categorias.map((cat) => (
+        <div key={cat} className="mb-4">
+          <button
+            onClick={() => toggleCategory(cat)}
+            className="w-full flex justify-between items-center bg-gray-100 px-4 py-2 rounded"
+          >
+            <span className="font-semibold text-gray-800">{cat}</span>
+            <span className="text-gray-600">{expanded[cat] ? "▲" : "▼"}</span>
+          </button>
+
+          {expanded[cat] && (
+            <ul className="pl-6 pt-2 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+              {shopping[cat].map((item) => (
+                <li key={item} className="">
+                  <label className="inline-flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={!!checked[item]}
+                      onChange={() =>
+                        setChecked((c) => ({ ...c, [item]: !c[item] }))
+                      }
+                    />
+                    <span
+                      className={
+                        checked[item] ? "line-through text-gray-400" : ""
+                      }
+                    >
+                      {item}
+                    </span>
+                  </label>
+                </li>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {[...Array(maxLength)].map((_, rowIdx) => (
-              <tr key={rowIdx}>
-                {categorias.map(cat => {
-                  const item = shopping[cat][rowIdx];
-                  return (
-                    <td key={cat + rowIdx} className="pr-4 py-1 align-top whitespace-nowrap">
-                      {item ? (
-                        <label className="inline-flex items-center gap-1">
-                          <input
-                            type="checkbox"
-                            checked={!!checked[item]}
-                            onChange={() =>
-                              setChecked(c => ({ ...c, [item]: !c[item] }))
-                            }
-                          />
-                          <span className={checked[item] ? "line-through text-gray-400" : ""}>
-                            {item}
-                          </span>
-                        </label>
-                      ) : null}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </ul>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
