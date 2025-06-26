@@ -1,2 +1,5 @@
 import MealPlannerApp from "./MealPlannerApp";
-export default MealPlannerApp;
+
+export default function App() {
+  return <MealPlannerApp />;
+}
