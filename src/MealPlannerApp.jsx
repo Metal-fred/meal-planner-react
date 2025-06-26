@@ -4,60 +4,80 @@ export default function MealPlannerApp() {
   const [checked, setChecked] = useState({});
 
   const shopping = {
-    Verduras: [
-      "Lechuga", "Espinacas", "Repollo", "Zanahorias", "Tomates",
-      "Pepino", "Zapallo", "Brócoli", "Papas", "Pimiento", "Cebolla", "Ajo"
-    ],
+    Verduras: ["Lechuga", "Espinacas", "Repollo", "Zanahorias", "Tomates", "Pepino", "Zapallo", "Brócoli", "Papas", "Pimiento", "Cebolla", "Ajo"],
     Frutas: ["Manzanas", "Plátanos", "Peras", "Arándanos"],
-    Proteínas: [
-      "Huevos", "P. pollo", "Salmón", "Jurel", "P. pavo",
-      "Atún", "Quesillo", "Yogurt"
-    ],
+    Proteínas: ["Huevos", "P. pollo", "Salmón", "Jurel", "P. pavo", "Atún", "Quesillo", "Yogurt"],
     Legumbres: ["Lentejas", "Garbanzos", "Arroz int.", "Quinoa", "Avena tra."],
     Panadería: ["Pan int.", "Pan pita"],
     "Frutos secos": ["Nueces", "Linaza", "Frutos secos"],
     Otros: ["Aceite oliva", "Té verde", "Té de hierbas", "Cúrcuma", "Orégano", "Café"],
     Cárnicos: ["Longaniza", "Posta Rosada"],
-    Aseo: [
-      "Lavalosa", "Cloro", "Detergente", "Suavizante",
-      "Papel hig.", "Toallas h.", "Toallas li.", "NOVA"
-    ],
-    Licores: ["Vino tinto"],
+    Aseo: ["Lavalosa", "Cloro", "Detergente", "Suavizante", "Papel hig.", "Toallas h.", "Toallas li.", "NOVA"],
+    Licores: ["Vino tinto"]
   };
 
   const categorias = Object.keys(shopping);
   const maxLength = Math.max(...categorias.map(cat => shopping[cat].length));
 
-  const handleClear = () => setChecked({});
-  const handleCopy = () => {
-    const seleccionados = Object.entries(checked)
-      .filter(([_, val]) => val)
-      .map(([item]) => item)
+  const clearSelection = () => setChecked({});
+  const copySelected = () => {
+    const selectedItems = Object.entries(checked)
+      .filter(([, value]) => value)
+      .map(([key]) => key)
       .join(", ");
-    navigator.clipboard.writeText(seleccionados);
-    alert("Ítems copiados: " + seleccionados);
+    navigator.clipboard.writeText(selectedItems);
   };
 
-  const handleDownloadPDF = () => {
-    window.print(); // Para versión simple como PDF desde navegador
+  const downloadPDF = () => {
+    import("jspdf").then(jsPDF => {
+      const doc = new jsPDF.jsPDF();
+      let y = 10;
+      categorias.forEach(cat => {
+        doc.text(cat, 10, y);
+        y += 6;
+        shopping[cat].forEach(item => {
+          if (checked[item]) {
+            doc.text("• " + item, 14, y);
+            y += 6;
+          }
+        });
+        y += 4;
+      });
+      doc.save("lista-supermercado.pdf");
+    });
   };
 
   return (
     <div className="p-4 max-w-7xl mx-auto overflow-x-auto">
-      <h1 className="text-2xl font-bold mb-6 text-center">Meal Planner</h1>
-
-      <div className="flex flex-wrap gap-4 justify-center mb-4">
-        <button onClick={handleClear} className="border px-4 py-1 rounded">Limpiar selección</button>
-        <button onClick={handleCopy} className="border px-4 py-1 rounded">Copiar seleccionados</button>
-        <button onClick={handleDownloadPDF} className="border px-4 py-1 rounded">Descargar PDF</button>
+      <h1 className="text-2xl font-bold mb-4 text-center">Meal Planner</h1>
+      <div className="flex flex-wrap justify-center gap-2 mb-4">
+        <button
+          onClick={clearSelection}
+          className="bg-white border border-gray-400 px-4 py-1 rounded shadow hover:bg-gray-100"
+        >
+          Limpiar selección
+        </button>
+        <button
+          onClick={copySelected}
+          className="bg-white border border-gray-400 px-4 py-1 rounded shadow hover:bg-gray-100"
+        >
+          Copiar seleccionados
+        </button>
+        <button
+          onClick={downloadPDF}
+          className="bg-white border border-gray-400 px-4 py-1 rounded shadow hover:bg-gray-100"
+        >
+          Descargar PDF
+        </button>
       </div>
-
       <div className="overflow-x-auto">
-        <table className="table-fixed border-collapse w-full md:w-auto">
+        <table className="table-fixed border-collapse w-full text-sm">
           <thead>
             <tr>
               {categorias.map(cat => (
-                <th key={cat} className="text-left px-2 pb-2">{cat}</th>
+                <th key={cat} className="text-left pr-4 pb-2 align-top whitespace-nowrap">
+                  {cat}
+                </th>
               ))}
             </tr>
           </thead>
@@ -67,7 +87,7 @@ export default function MealPlannerApp() {
                 {categorias.map(cat => {
                   const item = shopping[cat][rowIdx];
                   return (
-                    <td key={cat + rowIdx} className="px-2 py-1 align-top">
+                    <td key={cat + rowIdx} className="pr-4 py-1 align-top whitespace-nowrap">
                       {item ? (
                         <label className="inline-flex items-center gap-1">
                           <input
