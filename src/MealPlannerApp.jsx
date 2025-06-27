@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
 
+/**
+ * Meal‑Planner (versión completa)
+ * - Responsive (centro en desktop, 100 % en móvil)
+ * - Tema claro/oscuro automático (prefers‑color‑scheme)
+ * - Acordeones por categoría
+ * - Recordatorio de ítems seleccionados (localStorage)
+ * - Botones: Limpiar, Copiar seleccionados y "Mi lista" (con texto listo para pegar)
+ */
 export default function MealPlannerApp() {
-  /* ---------- Datos ---------- */
+  /* ------------------------ Datos ------------------------ */
   const shopping = {
     Verduras: [
       "Lechuga","Espinacas","Repollo","Zanahorias","Tomates","Pepino","Zapallo","Brócoli","Papas","Pimiento","Cebolla","Ajo",
@@ -18,29 +26,28 @@ export default function MealPlannerApp() {
   };
   const categorias = Object.keys(shopping);
 
-  /* ---------- Estado ---------- */
-  const [checked, setChecked] = useState({});
-  const [expanded, setExpanded] = useState({});
-  const [showList, setShowList] = useState(false);
-
-  /* ---------- Persistencia ---------- */
+  /* ------------------ Estado / Persistencia ------------------ */
+  const [checked,   setChecked]   = useState({});
+  const [expanded,  setExpanded]  = useState({});
+  const [showList,  setShowList]  = useState(false);
   useEffect(() => {
     try {
       setChecked(JSON.parse(localStorage.getItem("mp_checked") || "{}"));
       setExpanded(JSON.parse(localStorage.getItem("mp_expanded") || "{}"));
     } catch (_) {}
   }, []);
-  useEffect(() => localStorage.setItem("mp_checked", JSON.stringify(checked)), [checked]);
+  useEffect(() => localStorage.setItem("mp_checked", JSON.stringify(checked)),  [checked]);
   useEffect(() => localStorage.setItem("mp_expanded", JSON.stringify(expanded)), [expanded]);
 
-  /* ---------- Util ---------- */
-  const toggleCategory = (cat) => setExpanded((e) => ({ ...e, [cat]: !e[cat] }));
-  const clearSelection = () => setChecked({});
-  const copySelected = () => {
+  /* ------------------------ Utils ------------------------ */
+  const toggleCat   = (c)   => setExpanded((e) => ({ ...e, [c]: !e[c] }));
+  const toggleItem  = (i)   => setChecked ((c) => ({ ...c, [i]: !c[i] }));
+  const clearAll    = ()    => setChecked({});
+  const copySel     = ()    => {
     const txt = categorias
-      .map((cat) => {
-        const items = shopping[cat].filter((i) => checked[i]);
-        return items.length ? `${cat}:\n- ${items.join("\n- ")}` : null;
+      .map((c) => {
+        const items = shopping[c].filter((i) => checked[i]);
+        return items.length ? `${c}:\n- ${items.join("\n- ")}` : null;
       })
       .filter(Boolean)
       .join("\n\n");
@@ -49,64 +56,82 @@ export default function MealPlannerApp() {
     alert("¡Seleccionados copiados!");
   };
 
-  /* ---------- UI ---------- */
+  /* ------------------------ UI ------------------------ */
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 px-4 pb-10 flex justify-center">
-      {/* contenedor centrado */}
-      <div className="max-w-xl sm:max-w-2xl mx-auto w-full">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 flex justify-center">
+      <div className="w-full max-w-xl sm:max-w-2xl mx-auto">
         {/* Título */}
-        <h1 className="text-4xl sm:text-5xl font-extrabold mt-6 mb-6 text-center">Meal Planner</h1>
+        <h1 className="text-4xl font-extrabold mb-8 text-center">Meal Planner</h1>
 
         {/* Barra de acciones */}
-        <div className="flex flex-wrap justify-center gap-3 mb-6">
-          <button onClick={clearSelection} className="action-btn border-indigo-500 text-indigo-600 dark:text-indigo-300">Limpiar selección</button>
-          <button onClick={copySelected} className="action-btn border-pink-500 text-pink-600 dark:text-pink-300">Copiar seleccionados</button>
-          <button onClick={() => setShowList((s) => !s)} className="action-btn border-emerald-500 text-emerald-600 dark:text-emerald-300">{showList ? "Cerrar mi lista" : "Mi lista"}</button>
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
+          <ActionButton onClick={clearAll}       color="indigo">Limpiar selección</ActionButton>
+          <ActionButton onClick={copySel}        color="emerald">Copiar seleccionados</ActionButton>
+          <ActionButton onClick={() => setShowList((s) => !s)} color="pink">
+            {showList ? "Cerrar lista" : "Mi lista"}
+          </ActionButton>
         </div>
 
-        {/* Mi lista */}
+        {/* Panel "Mi lista" */}
         {showList && (
-          <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 whitespace-pre-wrap text-sm">
+          <pre className="whitespace-pre-wrap mb-8 p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm overflow-auto">
             {categorias
-              .map((cat) => {
-                const items = shopping[cat].filter((i) => checked[i]);
-                return items.length ? `${cat}:\n- ${items.join("\n- ")}` : null;
+              .map((c) => {
+                const items = shopping[c].filter((i) => checked[i]);
+                return items.length ? `${c}:\n- ${items.join("\n- ")}` : null;
               })
               .filter(Boolean)
               .join("\n\n") || "No hay ítems seleccionados."}
-          </div>
+          </pre>
         )}
 
         {/* Categorías */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {categorias.map((cat) => (
-            <div key={cat}>
-              <button onClick={() => toggleCategory(cat)} className="w-full flex justify-between items-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md shadow-sm font-semibold">
+            <section key={cat}>
+              <button
+                className="w-full flex justify-between items-center bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg shadow hover:bg-gray-200 dark:hover:bg-gray-700 transition font-medium"
+                onClick={() => toggleCat(cat)}
+              >
                 <span>{cat}</span>
-                <span className={`transform transition-transform ${expanded[cat] ? "rotate-180" : "rotate-0"}`}>▼</span>
+                <span className={`transition-transform ${expanded[cat] ? "rotate-180" : "rotate-0"}`}>▼</span>
               </button>
-              <div className={`transition-all duration-300 ease-in-out overflow-hidden ${expanded[cat] ? "opacity-100 max-h-96" : "opacity-0 max-h-0"}`}>
-                <ul className="list-none grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 px-4 text-sm">
+
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  expanded[cat] ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                }`}
+              >
+                <ul className="grid grid-cols-2 sm:grid-cols-3 gap-y-1 gap-x-4 mt-3 px-4 text-sm">
                   {shopping[cat].map((item) => (
                     <li key={item}>
-                      <label className="inline-flex items-center gap-1 select-none">
-                        <input type="checkbox" className="rounded text-indigo-600 focus:ring-indigo-500" checked={!!checked[item]} onChange={() => setChecked((c) => ({ ...c, [item]: !c[item] }))} />
+                      <label className="inline-flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          className="rounded text-indigo-600 focus:ring-indigo-500"
+                          checked={!!checked[item]}
+                          onChange={() => toggleItem(item)}
+                        />
                         <span className={checked[item] ? "line-through text-gray-400 dark:text-gray-500" : ""}>{item}</span>
                       </label>
                     </li>
                   ))}
                 </ul>
               </div>
-            </div>
+            </section>
           ))}
         </div>
       </div>
-
-      <style jsx>{`
-        .action-btn {
-          @apply bg-white dark:bg-gray-800 border px-4 py-1.5 rounded-md shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium transition;
-        }
-      `}</style>
     </main>
+  );
+}
+
+/* ---------- Botón reutilizable ---------- */
+function ActionButton({ children, onClick, color }) {
+  const base = "border px-4 py-1.5 rounded-md shadow text-sm font-medium transition";
+  const light = `bg-white hover:bg-gray-100 border-${color}-500 text-${color}-600`;
+  const dark  = `dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-${color}-300`;
+  return (
+    <button onClick={onClick} className={`${base} ${light} ${dark}`}>{children}</button>
   );
 }
