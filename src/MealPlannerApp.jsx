@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function MealPlannerApp() {
   /* ------------- Datos ------------- */
@@ -20,12 +20,29 @@ export default function MealPlannerApp() {
     ],
     Licores: ["Vino tinto"],
   };
-
   const categorias = Object.keys(shopping);
 
   /* ------------- Estado ------------- */
   const [checked, setChecked] = useState({});
   const [expanded, setExpanded] = useState({});
+
+  /* ------------- Persistencia ------------- */
+  useEffect(() => {
+    try {
+      const savedChecked = JSON.parse(localStorage.getItem("mp_checked") || "{}");
+      const savedExpanded = JSON.parse(localStorage.getItem("mp_expanded") || "{}");
+      setChecked(savedChecked);
+      setExpanded(savedExpanded);
+    } catch (_) {}
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("mp_checked", JSON.stringify(checked));
+  }, [checked]);
+
+  useEffect(() => {
+    localStorage.setItem("mp_expanded", JSON.stringify(expanded));
+  }, [expanded]);
 
   /* ------------- Helpers ------------- */
   const toggleCategory = (cat) => setExpanded((e) => ({ ...e, [cat]: !e[cat] }));
@@ -49,43 +66,46 @@ export default function MealPlannerApp() {
 
   /* ------------- UI ------------- */
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 px-4 pb-10 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-4 pb-10 flex flex-col items-center">
       {/* Título */}
       <h1 className="text-4xl sm:text-5xl font-extrabold mt-6 mb-6 text-center w-full">
         Meal Planner
       </h1>
 
       {/* Barra de acciones */}
-      <div className="flex flex-wrap justify-center gap-3 w-full max-w-2xl mx-auto mb-8">
+      <div className="flex flex-wrap justify-center gap-3 w-full max-w-2xl mb-8">
         <button
           onClick={clearSelection}
-          className="action-btn border-indigo-500 text-indigo-600"
+          className="action-btn border-indigo-500 text-indigo-600 dark:text-indigo-300"
         >
           Limpiar selección
         </button>
         <button
           onClick={copySelected}
-          className="action-btn border-pink-500 text-pink-600"
+          className="action-btn border-pink-500 text-pink-600 dark:text-pink-300"
         >
           Copiar seleccionados
         </button>
       </div>
 
       {/* Categorías */}
-      <div className="w-full max-w-2xl mx-auto space-y-3">
+      <div className="w-full max-w-2xl space-y-3">
         {categorias.map((cat) => (
-          <div key={cat}>
-            {/* Encabezado acordeón */}
+          <div key={cat} className="">{
+            /* Contenedor de categoría */}
             <button
               onClick={() => toggleCategory(cat)}
-              className="w-full flex justify-between items-center bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md shadow-sm font-semibold"
+              className="w-full flex justify-between items-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md shadow-sm font-semibold"
             >
               <span>{cat}</span>
               <span>{expanded[cat] ? "▲" : "▼"}</span>
             </button>
 
-            {/* Lista */}
-            {expanded[cat] && (
+            <div
+              className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                expanded[cat] ? "opacity-100 max-h-96" : "opacity-0 max-h-0"
+              }`}
+            >
               <ul className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 px-4 text-sm">
                 {shopping[cat].map((item) => (
                   <li key={item}>
@@ -99,7 +119,7 @@ export default function MealPlannerApp() {
                         }
                       />
                       <span
-                        className={checked[item] ? "line-through text-gray-400" : ""}
+                        className={checked[item] ? "line-through text-gray-400 dark:text-gray-500" : ""}
                       >
                         {item}
                       </span>
@@ -107,7 +127,7 @@ export default function MealPlannerApp() {
                   </li>
                 ))}
               </ul>
-            )}
+            </div>
           </div>
         ))}
       </div>
@@ -115,7 +135,7 @@ export default function MealPlannerApp() {
       {/* Util class */}
       <style jsx>{`
         .action-btn {
-          @apply bg-white border px-4 py-1.5 rounded-md shadow-sm hover:bg-gray-100 text-sm font-medium transition;
+          @apply bg-white dark:bg-gray-800 border px-4 py-1.5 rounded-md shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium transition;
         }
       `}</style>
     </div>
