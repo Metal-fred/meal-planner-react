@@ -51,8 +51,9 @@ export default function MealPlannerApp() {
 
   /* ---------- UI ---------- */
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-4 pb-10 flex flex-col items-center">
-      <div className="w-full max-w-md sm:max-w-2xl mx-auto">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 px-4 pb-10 flex justify-center">
+      {/* contenedor centrado */}
+      <div className="max-w-xl sm:max-w-2xl mx-auto w-full">
         {/* Título */}
         <h1 className="text-4xl sm:text-5xl font-extrabold mt-6 mb-6 text-center">Meal Planner</h1>
 
@@ -106,6 +107,6 @@ export default function MealPlannerApp() {
           @apply bg-white dark:bg-gray-800 border px-4 py-1.5 rounded-md shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium transition;
         }
       `}</style>
-    </div>
+    </main>
   );
 }
