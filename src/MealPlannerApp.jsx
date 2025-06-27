@@ -25,6 +25,7 @@ export default function MealPlannerApp() {
   /* ------------- Estado ------------- */
   const [checked, setChecked] = useState({});
   const [expanded, setExpanded] = useState({});
+  const [showList, setShowList] = useState(false);
 
   /* ------------- Persistencia ------------- */
   useEffect(() => {
@@ -67,69 +68,86 @@ export default function MealPlannerApp() {
   /* ------------- UI ------------- */
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-4 pb-10 flex flex-col items-center">
-      {/* Título */}
-      <h1 className="text-4xl sm:text-5xl font-extrabold mt-6 mb-6 text-center w-full">
-        Meal Planner
-      </h1>
+      {/* Wrapper centrado*/}
+      <div className="w-full max-w-2xl">
+        {/* Título */}
+        <h1 className="text-4xl sm:text-5xl font-extrabold mt-6 mb-6 text-center">
+          Meal Planner
+        </h1>
 
-      {/* Barra de acciones */}
-      <div className="flex flex-wrap justify-center gap-3 w-full max-w-2xl mb-8">
-        <button
-          onClick={clearSelection}
-          className="action-btn border-indigo-500 text-indigo-600 dark:text-indigo-300"
-        >
-          Limpiar selección
-        </button>
-        <button
-          onClick={copySelected}
-          className="action-btn border-pink-500 text-pink-600 dark:text-pink-300"
-        >
-          Copiar seleccionados
-        </button>
-      </div>
+        {/* Barra de acciones */}
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
+          <button
+            onClick={clearSelection}
+            className="action-btn border-indigo-500 text-indigo-600 dark:text-indigo-300"
+          >
+            Limpiar selección
+          </button>
+          <button
+            onClick={copySelected}
+            className="action-btn border-pink-500 text-pink-600 dark:text-pink-300"
+          >
+            Copiar seleccionados
+          </button>
+          <button
+            onClick={() => setShowList((s) => !s)}
+            className="action-btn border-emerald-500 text-emerald-600 dark:text-emerald-300"
+          >
+            {showList ? "Cerrar mi lista" : "Mi lista"}
+          </button>
+        </div>
 
-      {/* Categorías */}
-      <div className="w-full max-w-2xl space-y-3">
-        {categorias.map((cat) => (
-          <div key={cat} className="">{
-            /* Contenedor de categoría */}
-            <button
-              onClick={() => toggleCategory(cat)}
-              className="w-full flex justify-between items-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md shadow-sm font-semibold"
-            >
-              <span>{cat}</span>
-              <span>{expanded[cat] ? "▲" : "▼"}</span>
-            </button>
-
-            <div
-              className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                expanded[cat] ? "opacity-100 max-h-96" : "opacity-0 max-h-0"
-              }`}
-            >
-              <ul className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 px-4 text-sm">
-                {shopping[cat].map((item) => (
-                  <li key={item}>
-                    <label className="inline-flex items-center gap-1 select-none">
-                      <input
-                        type="checkbox"
-                        className="rounded text-indigo-600 focus:ring-indigo-500"
-                        checked={!!checked[item]}
-                        onChange={() =>
-                          setChecked((c) => ({ ...c, [item]: !c[item] }))
-                        }
-                      />
-                      <span
-                        className={checked[item] ? "line-through text-gray-400 dark:text-gray-500" : ""}
-                      >
-                        {item}
-                      </span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            </div>
+        {/* Lista guardada */}
+        {showList && (
+          <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 whitespace-pre-wrap text-sm">
+            {buildSelectedByCategory() || "No hay ítems seleccionados."}
           </div>
-        ))}
+        )}
+
+        {/* Categorías */}
+        <div className="space-y-3">
+          {categorias.map((cat) => (
+            <div key={cat}>
+              {/* Encabezado acordeón */}
+              <button
+                onClick={() => toggleCategory(cat)}
+                className="w-full flex justify-between items-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 px-4 py-2 rounded-md shadow-sm font-semibold"
+              >
+                <span>{cat}</span>
+                <span>{expanded[cat] ? "▲" : "▼"}</span>
+              </button>
+
+              {/* Lista con fade */}
+              <div
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                  expanded[cat] ? "opacity-100 max-h-96" : "opacity-0 max-h-0"
+                }`}
+              >
+                <ul className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-1 mt-2 px-4 text-sm">
+                  {shopping[cat].map((item) => (
+                    <li key={item}>
+                      <label className="inline-flex items-center gap-1 select-none">
+                        <input
+                          type="checkbox"
+                          className="rounded text-indigo-600 focus:ring-indigo-500"
+                          checked={!!checked[item]}
+                          onChange={() =>
+                            setChecked((c) => ({ ...c, [item]: !c[item] }))
+                          }
+                        />
+                        <span
+                          className={checked[item] ? "line-through text-gray-400 dark:text-gray-500" : ""}
+                        >
+                          {item}
+                        </span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Util class */}
